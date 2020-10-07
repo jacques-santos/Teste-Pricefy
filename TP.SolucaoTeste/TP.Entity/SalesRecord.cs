@@ -7,6 +7,7 @@ namespace TP.Entity
 {
     public class SalesRecord
     {
+        #region Dados do CSV Convertidos
         public string Region { get; set; }
         public string Country { get; set; }
         public string Item_Type { get; set; }
@@ -21,21 +22,29 @@ namespace TP.Entity
         public decimal Total_Revenue { get; set; }
         public decimal Total_Cost { get; set; }
         public decimal Total_Profit { get; set; }
+        #endregion
 
+        #region Dados da Tentativa de Conversão da Linha
         public bool FlagErro { get; set; }
         public string ErroImportacao { get; set; }
+        #endregion
+
+        #region Dados Exclusivos para Banco de Dados
+        public int Fk_IdCSVFile { get; set; }
+        public int NumLinha { get; set; }
+        #endregion
 
         public SalesRecord()
         { }
 
-        public SalesRecord(LinhaCSV oLinhaCSV)
+        public SalesRecord(LinhaCSV oLinhaCSV, int NumLinha)
         {
+            this.NumLinha = NumLinha;
             ConverterDados(oLinhaCSV);
         }
 
         private void ConverterDados(LinhaCSV oLinhaCSV)
-        {
-
+        {            
             this.ErroImportacao = "";
 
             this.Region = oLinhaCSV.Region;
