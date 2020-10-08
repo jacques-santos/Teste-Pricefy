@@ -15,5 +15,6 @@ namespace TP.Entity
         public int StatusProcessamento { get; set; }
         public string DescricaoProcessamento { get; set; }
         public List<SalesRecord> RegistrosParaImportacao { get; set; }
+        public DateTime DataInsercao { get; set; }
     }
 }

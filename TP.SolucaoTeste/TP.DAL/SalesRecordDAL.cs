@@ -23,7 +23,7 @@ namespace TP.DAL
             using (var connection = new SqlConnection(_conn))
             {
                 var arquivoCSV = connection.QuerySingle<ArquivoCSV>(@"SELECT * FROM [dbo].[TbCSVFile] WHERE IdCSVFile = @idArquivoCSV",
-               idArquivoCSV);
+               new { idArquivoCSV });
 
                 return arquivoCSV;
             }
@@ -34,7 +34,7 @@ namespace TP.DAL
             using (var connection = new SqlConnection(_conn))
             {
                 var arquivoCSV = connection.Query<ArquivoCSV>(@"SELECT * FROM [dbo].[TbCSVFile] WHERE NomeIdentificacao = @nomeIdentificacao",
-               nomeIdentificacao).ToList();
+               new { nomeIdentificacao }).ToList();
 
                 return arquivoCSV;
             }
@@ -42,38 +42,35 @@ namespace TP.DAL
 
         public ArquivoCSV SalvarRegistrosDoCSV(ArquivoCSV arquivoCSV)
         {
-            using (var connection = new SqlConnection(_conn))
+            try
             {
-                connection.Open();
 
-                arquivoCSV.IdCSVFile = connection.QuerySingle<int>(@"INSERT INTO [dbo].[TbCSVFile] (
+                using (var connection = new SqlConnection(_conn))
+                {
+                    arquivoCSV.IdCSVFile = connection.QuerySingle<int>(@"INSERT INTO [dbo].[TbCSVFile] (
                                                         [CaminhoInicial],
                                                         [NomeIdentificacao],      
                                                         [TotalLinhas],            
                                                         [TotalLinhasImportadas],  
-                                                        [TotalLinhasComErro],     
-                                                        [StatusProcessamento],    
-                                                        [DescricaoProcessamento]
+                                                        [TotalLinhasComErro]
                                                         ) VALUES (
                                                         @CaminhoInicial,
                                                         @NomeIdentificacao,      
                                                         @TotalLinhas,            
                                                         @TotalLinhasImportadas,  
-                                                        @TotalLinhasComErro,     
-                                                        @StatusProcessamento,    
-                                                        @DescricaoProcessamento
+                                                        @TotalLinhasComErro
                                                         ); 
                                                        SELECT CAST(SCOPE_IDENTITY() as int)",
-                arquivoCSV);
+                    arquivoCSV);
 
-                arquivoCSV.RegistrosParaImportacao.ForEach(o => o.Fk_IdCSVFile = arquivoCSV.IdCSVFile);
-                DataTable dtRegistrosParaImportacao = CollectionHelper.ConvertTo(arquivoCSV.RegistrosParaImportacao.Where(l => !l.FlagErro));
-                DataTable dtRegistrosParaLog = CollectionHelper.ConvertTo(arquivoCSV.RegistrosParaImportacao.Where(l => l.FlagErro));
+                    arquivoCSV.RegistrosParaImportacao.ForEach(o => o.Fk_IdCSVFile = arquivoCSV.IdCSVFile);
+                    DataTable dtRegistrosParaImportacao = CollectionHelper.ConvertTo<SalesRecord>(arquivoCSV.RegistrosParaImportacao.Where(l => !l.FlagErro).ToList());
+                    DataTable dtRegistrosParaLog = CollectionHelper.ConvertTo<SalesRecord>(arquivoCSV.RegistrosParaImportacao.Where(l => l.FlagErro).ToList());
 
-                // Bulk Copy para Importacao
-                SqlBulkCopy objBulkImportacao = new SqlBulkCopy(_conn);
-                objBulkImportacao.DestinationTableName = "TbSalesRecord";
-                string[] colunasImportacao = {"Fk_IdCSVFile",
+                    // Bulk Copy para Importacao
+                    SqlBulkCopy objBulkImportacao = new SqlBulkCopy(_conn);
+                    objBulkImportacao.DestinationTableName = "TbSalesRecord";
+                    string[] colunasImportacao = {"Fk_IdCSVFile",
                                     "Region",
                                     "Country",
                                     "Item_Type",
@@ -89,24 +86,48 @@ namespace TP.DAL
                                     "Total_Cost",
                                     "Total_Profit",
                                     "NumLinha" };
-                foreach (var column in colunasImportacao)
-                { objBulkImportacao.ColumnMappings.Add(column, column); }
-                objBulkImportacao.WriteToServer(dtRegistrosParaImportacao);
+                    foreach (var column in colunasImportacao)
+                    { objBulkImportacao.ColumnMappings.Add(column, column); }
+                    objBulkImportacao.WriteToServer(dtRegistrosParaImportacao);
 
-                // Bulk Copy para Log de Erros
-                SqlBulkCopy objBulkLog = new SqlBulkCopy(_conn);
-                objBulkLog.DestinationTableName = "TbLogImportacao";
-                string[] colunasLog = {"Fk_IdCSVFile",
+                    // Bulk Copy para Log de Erros
+                    SqlBulkCopy objBulkLog = new SqlBulkCopy(_conn);
+                    objBulkLog.DestinationTableName = "TbLogImportacao";
+                    string[] colunasLog = {"Fk_IdCSVFile",
                                     "NumLinha",
                                     "ErroImportacao"};
 
-                foreach (var col in colunasLog)
-                { objBulkLog.ColumnMappings.Add(col, col); }
-                objBulkLog.WriteToServer(dtRegistrosParaLog);
+                    foreach (var col in colunasLog)
+                    { objBulkLog.ColumnMappings.Add(col, col); }
+                    objBulkLog.WriteToServer(dtRegistrosParaLog);
+
+                    arquivoCSV.StatusProcessamento = 1;
+                    arquivoCSV.DescricaoProcessamento = "Processo de importação executado com sucesso!";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                arquivoCSV.StatusProcessamento = -1;
+                arquivoCSV.DescricaoProcessamento = $"Erro: {ex.Message}";
             }
 
-            return new ArquivoCSV();
+            AtualizarStatusArquivoCSV(arquivoCSV);
+
+            return arquivoCSV;
+
         }
+
+        private void AtualizarStatusArquivoCSV(ArquivoCSV arquivoCSV)
+        {
+            using (var connection = new SqlConnection(_conn))
+            {
+                connection.Query(@"UPDATE [dbo].[TbCSVFile] SET StatusProcessamento = @StatusProcessamento,DescricaoProcessamento = @DescricaoProcessamento
+                                                        WHERE IdCSVFile = @IdCSVFile; ",
+                arquivoCSV);
+            }
+        }
+
 
     }
 }

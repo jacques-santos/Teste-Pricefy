@@ -1,5 +1,8 @@
 USE [TestePricefy]
 GO
+--drop table [TbLogImportacao]
+--drop table [TbSalesRecord]
+--drop table [TbCSVFile]
 -- Tabela para registro de arquivos
 CREATE TABLE [dbo].[TbCSVFile](
 	[IdCSVFile] [int] IDENTITY(1,1) NOT NULL,
@@ -8,10 +11,9 @@ CREATE TABLE [dbo].[TbCSVFile](
 	[TotalLinhas] [int] NOT NULL,
 	[TotalLinhasImportadas] [int] NOT NULL,
 	[TotalLinhasComErro] [int] NOT NULL,
-	[StatusProcessamento] [bit] NOT NULL,
-	[DescricaoProcessamento] [varchar](200) NOT NULL,
-	[DataInsercao] [datetime] NOT NULL,
-	[UsuarioInsercao] [varchar](100) NOT NULL,
+	[StatusProcessamento] [bit] NULL,
+	[DescricaoProcessamento] [varchar](200) NULL,
+	[DataInsercao] [datetime] NOT NULL,	
 PRIMARY KEY CLUSTERED 
 (
 	[IdCSVFile] ASC

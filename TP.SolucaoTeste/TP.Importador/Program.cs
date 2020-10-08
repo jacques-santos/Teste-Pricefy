@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using TP.Entity;
 using System.Text;
+using System.Data.SqlClient;
 
 namespace TP.Importador
 {

@@ -41,7 +41,7 @@ namespace TP.Importador
 
                     // Chamada à API de testes
                     var client = new HttpClient();
-                    client.BaseAddress = new Uri("http://localhost:63213/");
+                    client.BaseAddress = new Uri("http://localhost:5000/");
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -74,7 +74,7 @@ namespace TP.Importador
             }
         }
       
-        public static List<ArquivoCSV> ConsultarArquivo(string dadoParaConsulta = null)
+        public static  ConsultaArquivo ConsultarArquivo(string dadoParaConsulta = null)
         {
             Console.WriteLine("Informe o nome ou id do arquivo para consulta:");
 
@@ -84,30 +84,30 @@ namespace TP.Importador
             try
             {
                 // Preparação do objeto de arquivo com detalhes para envio
-                var arquivoGenericoParaConsulta = new ArquivoCSV();
+                var consulta = new ConsultaArquivo();
 
                 var id = 0;
                 int.TryParse(dadoParaConsulta, out id);
 
-                arquivoGenericoParaConsulta.IdCSVFile = id;
-                arquivoGenericoParaConsulta.NomeIdentificacao = dadoParaConsulta;
+                consulta.IdCSVFile = id;
+                consulta.NomeIdentificacao = dadoParaConsulta;
 
                 // Chamada à API de testes
                 var client = new HttpClient();
-                client.BaseAddress = new Uri("http://localhost:63213/");
+                client.BaseAddress = new Uri("http://localhost:5000/");
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 // Conversão para JSON do arquivo
-                string json = JsonSerializer.Serialize(arquivoGenericoParaConsulta);
+                string json = JsonSerializer.Serialize(consulta);
 
                 // Envio de dados e retorno esperado como JSON
                 HttpResponseMessage retorno = client.PostAsync("api/principal/consultar", new StringContent(json, Encoding.UTF8, "application/json")).Result;
-                var arquivosRetorno = JsonSerializer.Deserialize<List<ArquivoCSV>>(retorno.Content.ReadAsStringAsync().Result);
+                var retornoConsulta = JsonSerializer.Deserialize<ConsultaArquivo>(retorno.Content.ReadAsStringAsync().Result);
 
-                Console.WriteLine($"\n\n({arquivosRetorno.Count()}) Arquivos Encontrados...");
+                Console.WriteLine($"\n\n{retornoConsulta.Descricao};");
 
-                foreach (var arq in arquivosRetorno.Select((value, i) => new { i, value }))
+                foreach (var arq in retornoConsulta.ArquivosEncontrados.Select((value, i) => new { i, value }))
                 {
                     Console.WriteLine($"\nDados do arquivo ({arq.i}):");
                     Console.WriteLine($"---Total de Linhas:{arq.value.TotalLinhas}");
@@ -115,9 +115,11 @@ namespace TP.Importador
                     Console.WriteLine($"---Total de Linhas Com Erro:{arq.value.TotalLinhasComErro}");
                     Console.WriteLine($"---ID do Arquivo:{arq.value.IdCSVFile}");
                     Console.WriteLine($"---Nome de Identificação:{arq.value.NomeIdentificacao}");
+                    Console.WriteLine($"---Data Processamento:{arq.value.DataInsercao.ToString("dd/MM/yyyy HH:mm:ss")}");
+                    Console.WriteLine($"---Descricao Processamento:{arq.value.DescricaoProcessamento}");
                 }
 
-                return arquivosRetorno;
+                return retornoConsulta;
             }
             catch (Exception e)
             {                

@@ -41,26 +41,29 @@ namespace TP.API.Controllers
             }
         }
 
-        [HttpGet("consultar")]
-        public List<ArquivoCSV> ConsultarArquivos([FromBody] ArquivoCSV arquivoCSV)
+        [HttpPost("consultar")]
+        public ConsultaArquivo ConsultarArquivos([FromBody] ConsultaArquivo consulta)
         {
-            var listaArquivos = new List<ArquivoCSV>();
-
             try
-            {   
-                if(arquivoCSV.IdCSVFile > 0)
-                { listaArquivos.Add(_dal.ObterArquivoCSVPorId(arquivoCSV.IdCSVFile)); }
+            {
+                consulta.ArquivosEncontrados = new List<ArquivoCSV>();
 
-                if (arquivoCSV.NomeIdentificacao.Length > 0)
-                { listaArquivos.AddRange(_dal.ObterArquivoCSVPorNome(arquivoCSV.NomeIdentificacao));}
+                if (consulta.IdCSVFile > 0)
+                { consulta.ArquivosEncontrados.Add(_dal.ObterArquivoCSVPorId(consulta.IdCSVFile)); }
 
-                return listaArquivos;
+                if (consulta.NomeIdentificacao.Length > 0)
+                { consulta.ArquivosEncontrados.AddRange(_dal.ObterArquivoCSVPorNome(consulta.NomeIdentificacao));}
+
+                consulta.StatusConsulta = 1;
+                consulta.Descricao = $"({consulta.ArquivosEncontrados.Count()}) Arquivos Encontrados";
+
+                return consulta;
             }
             catch (Exception ex)
             {
-                arquivoCSV.StatusProcessamento = -1;
-                arquivoCSV.DescricaoProcessamento = ex.Message;
-                return listaArquivos;
+                consulta.StatusConsulta = -1;
+                consulta.Descricao = $"Erro: {ex.Message}";
+                return consulta;
             }
         }
     }
