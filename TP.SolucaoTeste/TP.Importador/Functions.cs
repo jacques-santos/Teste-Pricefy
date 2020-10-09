@@ -12,7 +12,7 @@ using TP.Entity;
 namespace TP.Importador
 {
     public class Functions
-    {
+    {       
         public static ArquivoCSV ImportarArquivo(string caminhoArquivoCSV = null, string nomeIdentificacao = null)
         {
             Console.WriteLine("Informe o caminho de um arquivo para importação:");
@@ -24,7 +24,7 @@ namespace TP.Importador
                 // Criação de StreamReader para importação via CSVHelper
                 using (var fs = new StreamReader(caminhoArquivoCSV))
                 {
-                    List<SalesRecord> lines = new CsvReader(fs, System.Globalization.CultureInfo.CurrentCulture).GetRecords<LinhaCSV>().Select((l, index) => new SalesRecord(l, index)).ToList();
+                    List<SalesRecord> lines = new CsvReader(fs, System.Globalization.CultureInfo.CurrentCulture).GetRecords<LinhaCSV>().Select((l, index) => new SalesRecord(l, index+1)).ToList();
 
                     Console.WriteLine("Informe um nome para identificação do arquivo:");
                     if (string.IsNullOrEmpty(nomeIdentificacao))

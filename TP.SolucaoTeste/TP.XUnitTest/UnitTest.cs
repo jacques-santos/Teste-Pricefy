@@ -13,7 +13,7 @@ namespace TP.XUnitTest
         [Fact]
         public void TesteDeImportacaoDeArquivoLocal()
         {
-            var retornoDoTeste = Functions.ImportarArquivo("\"C:\\Users\\Vera\\Desktop\\10000 Sales Records.csv\"", $"Teste_{DateTime.Now.ToString("yyMMddHHmmss")}");
+            var retornoDoTeste = Functions.ImportarArquivo("C:\\Users\\Vera\\Desktop\\10000 Sales Records.csv", $"Teste_{DateTime.Now.ToString("yyMMddHHmmss")}");
 
             Assert.Equal(expected: 1, actual: retornoDoTeste.StatusProcessamento);
         }
@@ -22,14 +22,14 @@ namespace TP.XUnitTest
         public void TesteDeConsultaSemRetorno()
         {
             var retornoDoTeste = Functions.ConsultarArquivo("584545454545152188");
-            Assert.Equal(expected: new List<ArquivoCSV>(), actual: retornoDoTeste);
+            Assert.Equal(expected:  new List<ArquivoCSV>(), actual: retornoDoTeste.ArquivosEncontrados);
         }
 
         [Fact]
         public void TesteDeConsultaComRetorno()
         {
             var retornoDoTeste = Functions.ConsultarArquivo("Teste");
-            Assert.True(retornoDoTeste.Any());
+            Assert.True(retornoDoTeste.ArquivosEncontrados.Any());
         }
     }
 }

@@ -33,8 +33,8 @@ namespace TP.DAL
         {
             using (var connection = new SqlConnection(_conn))
             {
-                var arquivoCSV = connection.Query<ArquivoCSV>(@"SELECT * FROM [dbo].[TbCSVFile] WHERE NomeIdentificacao = @nomeIdentificacao",
-               new { nomeIdentificacao }).ToList();
+                var arquivoCSV = connection.Query<ArquivoCSV>(@"SELECT * FROM [dbo].[TbCSVFile] WHERE NomeIdentificacao like @nomeIdentificacao",
+               new { nomeIdentificacao = $"%{nomeIdentificacao}%" }).ToList();
 
                 return arquivoCSV;
             }
